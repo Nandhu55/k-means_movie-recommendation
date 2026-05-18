@@ -12,7 +12,7 @@ Built using:
 
 # Live Demo
 
-:contentReference[oaicite:0]{index=0}
+https://k-meansmovie-recommendation.streamlit.app/
 
 ---
 
