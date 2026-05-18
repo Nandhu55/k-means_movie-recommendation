@@ -5,20 +5,35 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 
+
+
 st.set_page_config(
     page_title="Movie Recommendation System",
     layout="wide"
 )
 
-st.title("🎬 Movie Recommendation System")
+# -----------------------------------
+# Title
+# -----------------------------------
+
+st.title("🎬 Movie Recommendation System using K-Means")
 
 st.write(
-    "Get movie recommendations based on genres using K-Means Clustering."
+    """
+    This application recommends movies using:
+    
+    - K-Means Clustering
+    - Business Logic Clustering
+    - Genre-Based Filtering
+    """
 )
+
+# Load Dataset
 
 movies = pd.read_csv("tmdb_5000_movies.csv")
 
-# Features for Clustering
+# Feature Selection
+
 features = [
     'budget',
     'popularity',
@@ -30,7 +45,13 @@ features = [
 
 X = movies[features]
 
+# Handle Missing Values
+
+
 X = X.fillna(0)
+
+# Outlier Detection & Handling
+
 
 for column in features:
 
@@ -54,9 +75,14 @@ for column in features:
         X[column]
     )
 
+# Feature Scaling
+
 scaler = StandardScaler()
 
 X_scaled = scaler.fit_transform(X)
+
+# K-Means Clustering
+
 
 model = KMeans(
     n_clusters=5,
@@ -64,6 +90,21 @@ model = KMeans(
 )
 
 movies['Cluster'] = model.fit_predict(X_scaled)
+
+# Cluster Names
+
+cluster_names = {
+    0: "Blockbuster Movies",
+    1: "Popular Commercial Movies",
+    2: "Average Rated Movies",
+    3: "Low Budget Movies",
+    4: "Independent/Niche Movies"
+}
+
+movies['Cluster_Name'] = movies['Cluster'].map(cluster_names)
+
+# Genre Selection
+
 
 genres_list = [
     "Action",
@@ -80,9 +121,11 @@ genres_list = [
 ]
 
 selected_genre = st.selectbox(
-    "Select Movie Genre",
+    "🎭 Select Movie Genre",
     genres_list
 )
+
+
 
 if st.button("Recommend Movies"):
 
@@ -95,7 +138,12 @@ if st.button("Recommend Movies"):
     ]
 
     recommendations = filtered_movies[
-        ['title', 'vote_average', 'popularity']
+        [
+            'title',
+            'Cluster_Name',
+            'vote_average',
+            'popularity'
+        ]
     ]
 
     recommendations = recommendations.sort_values(
@@ -103,31 +151,41 @@ if st.button("Recommend Movies"):
         ascending=False
     )
 
-    st.subheader(f"Top {selected_genre} Movies")
+    st.subheader(f"🔥 Top {selected_genre} Movies")
 
     st.dataframe(
-        recommendations.head(10),
+        recommendations.head(15),
         use_container_width=True
     )
 
-st.sidebar.header("Project Information")
+#
 
-st.sidebar.write(
-    """
-    ### Algorithms Used
-    - K-Means Clustering
-    - StandardScaler
+st.sidebar.header("📌 Cluster Information")
 
-    ### Features Used
-    - Budget
-    - Popularity
-    - Revenue
-    - Runtime
-    - Vote Average
-    - Vote Count
-    """
-)
+for key, value in cluster_names.items():
+    st.sidebar.write(f"Cluster {key} → {value}")
 
-st.sidebar.header("Dataset Shape")
 
-st.sidebar.write(movies.shape)
+
+st.sidebar.header("📊 Dataset Information")
+
+st.sidebar.write(f"Rows: {movies.shape[0]}")
+st.sidebar.write(f"Columns: {movies.shape[1]}")
+
+
+
+st.sidebar.header("⚙️ Features Used")
+
+for feature in features:
+    st.sidebar.write(f"✔️ {feature}")
+
+# Cluster Counts
+st.sidebar.header("🎬 Movies per Cluster")
+
+cluster_counts = movies['Cluster_Name'].value_counts()
+
+st.sidebar.write(cluster_counts)
+
+
+
+st.markdown("---")
